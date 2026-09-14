@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SI-ASRAMA | Sistem Presensi & Insentif Kegiatan Asrama</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- HTML5-QRCode Continuous Live Camera Scanner Library -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <!-- QRCode.js for Student Pass Generator -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --bg-card: #1e293b;
+      --bg-card-hover: #334155;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-light: rgba(99, 102, 241, 0.15);
+      --accent: #06b6d4;
+      --success: #10b981;
+      --success-bg: rgba(16, 185, 129, 0.15);
+      --warning: #f59e0b;
+      --warning-bg: rgba(245, 158, 11, 0.15);
+      --danger: #ef4444;
+      --danger-bg: rgba(239, 68, 68, 0.15);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --radius: 16px;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 80px;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4, .brand-font {
+      font-family: 'Outfit', sans-serif;
+    }
+
+    /* Header Styling */
+    header {
+      background: rgba(30, 41, 59, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid var(--border);
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(90deg, #ffffff, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-subtitle {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .system-status-pill {
+      font-size: 0.7rem;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--success);
+      box-shadow: 0 0 8px var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      max-width: 600px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    /* Bottom Navigation Bar */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
+      z-index: 1000;
+    }
+
+    .nav-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 6px 14px;
+      border-radius: 12px;
+      transition: all 0.2s ease;
+    }
+
+    .nav-btn i {
+      font-size: 20px;
+      width: 22px;
+      height: 22px;
+    }
+
+    .nav-btn.active {
+      color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    /* Tab Sections */
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Form Controls */
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .form-select, .form-input {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      color: white;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 0.92rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .form-select:focus, .form-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    /* Scanner Viewport */
+    .scanner-viewport-container {
+      position: relative;
+      background: #000;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 2px solid var(--border);
+      min-height: 280px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #reader {
+      width: 100%;
+      border: none !important;
+    }
+
+    #reader video {
+      object-fit: cover !important;
+      border-radius: 14px;
+    }
+
+    .scanner-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .scanner-target-box {
+      width: 210px;
+      height: 210px;
+      border: 2px dashed rgba(255, 255, 255, 0.6);
+      border-radius: 20px;
+      position: relative;
+      box-shadow: 0 0 0 4000px rgba(15, 23, 42, 0.55);
+    }
+
+    .scanner-laser {
+      position: absolute;
+      top: 0;
+      left: 10%;
+      right: 10%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #06b6d4, #6366f1, transparent);
+      box-shadow: 0 0 12px #06b6d4, 0 0 8px #6366f1;
+      animation: scanLaser 2s infinite ease-in-out;
+    }
+
+    @keyframes scanLaser {
+      0% { top: 5%; opacity: 0.3; }
+      50% { top: 90%; opacity: 1; }
+      100% { top: 5%; opacity: 0.3; }
+    }
+
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-secondary {
+      background: #334155;
+      color: white;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .btn-block {
+      width: 100%;
+    }
+
+    /* Result Indicator */
+    .result-indicator {
+      border-radius: 14px;
+      padding: 16px;
+      margin-top: 14px;
+      display: none;
+      animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-indicator.success {
+      display: block;
+      background: var(--success-bg);
+      border: 1px solid var(--success);
+      color: #a7f3d0;
+    }
+
+    .result-indicator.error {
+      display: block;
+      background: var(--danger-bg);
+      border: 1px solid var(--danger);
+      color: #fca5a5;
+    }
+
+    .result-indicator.warning {
+      display: block;
+      background: var(--warning-bg);
+      border: 1px solid var(--warning);
+      color: #fde68a;
+    }
+
+    .result-indicator.processing {
+      display: block;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid var(--primary);
+      color: #c7d2fe;
+    }
+
+    .result-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .result-detail {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      line-height: 1.4;
+    }
+
+    /* Debounce Bar */
+    .debounce-bar-container {
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      margin-top: 10px;
+      overflow: hidden;
+      display: none;
+    }
+
+    .debounce-progress {
+      height: 100%;
+      background: var(--primary);
+      width: 100%;
+      transition: width 2.5s linear;
+    }
+
+    /* Leaderboard */
+    .leaderboard-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .leaderboard-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border);
+      padding: 12px 14px;
+      border-radius: 12px;
+    }
+
+    .leaderboard-rank {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .rank-1 { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+    .rank-2 { background: linear-gradient(135deg, #94a3b8, #64748b); color: white; }
+    .rank-3 { background: linear-gradient(135deg, #b45309, #78350f); color: white; }
+
+    .student-info {
+      flex: 1;
+      margin: 0 12px;
+    }
+
+    .student-name {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: white;
+    }
+
+    .student-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .points-badge {
+      background: rgba(99, 102, 241, 0.2);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 0.82rem;
+    }
+
+    /* Student QR Pass Card */
+    .qr-card-preview {
+      background: linear-gradient(145deg, #1e1b4b, #0f172a);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 20px;
+      padding: 24px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    }
+
+    #qr-output-container {
+      background: white;
+      padding: 14px;
+      border-radius: 16px;
+      margin: 16px 0;
+      display: flex;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    /* Quick Test NIM Chips */
+    .quick-nim-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .chip {
+      background: var(--bg-card-hover);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+
+    .chip:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-card {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--border);
+      padding: 14px;
+      border-radius: 14px;
+    }
+
+    .stat-val {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: white;
+    }
+
+    .stat-lbl {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="brand-logo">
+      <div class="brand-icon">SA</div>
+      <div>
+        <div class="brand-title">SI-ASRAMA</div>
+        <div class="brand-subtitle">Presensi & Gamifikasi Poin</div>
+      </div>
+    </div>
+    <div class="system-status-pill" id="status-pill">
+      <div class="status-dot"></div>
+      <span id="status-text">Connected</span>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main>
+
+    <!-- ==================== TAB 1: OPERATOR SCANNER ==================== -->
+    <div id="tab-scanner" class="tab-content active">
+      
+      <!-- Event Selector Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <i data-lucide="calendar-check" style="color: var(--primary);"></i>
+            Pilih Kegiatan Aktif
+          </div>
+          <button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.72rem;" onclick="loadEvents()">
+            <i data-lucide="refresh-cw" style="width: 12px; height: 12px;"></i> Refresh
+          </button>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <select id="event-select" class="form-select" onchange="onEventChanged()">
+            <option value="">-- Memuat Kegiatan Aktif... --</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Quick Session Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-val" id="stat-scanned-count">0</div>
+          <div class="stat-lbl">Presensi Berhasil Sesi Ini</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="stat-event-points">0 PTS</div>
+          <div class="stat-lbl">Bobot Poin Kegiatan</div>
+        </div>
+      </div>
+
+      <!-- Live Streaming Camera Scanner Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <i data-lucide="qr-code" style="color: var(--accent);"></i>
+            Pemindai Kamera Live (Streaming)
+          </div>
+          <button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.72rem;" id="toggle-camera-btn" onclick="toggleCamera()">
+            <i data-lucide="camera" style="width: 14px; height: 14px;"></i> Turn On Kamera
+          </button>
+        </div>
+
+        <div class="scanner-viewport-container">
+          <div id="reader"></div>
+          <div class="scanner-overlay" id="scanner-overlay" style="display: none;">
+            <div class="scanner-target-box">
+              <div class="scanner-laser"></div>
+            </div>
+            <div style="font-size: 0.75rem; color: rgba(255,255,255,0.8); margin-top: 14px; font-weight: 600;">
+              Arahkan Kode QR Mahasiswa ke Kotak
+            </div>
+          </div>
+        </div>
+
+        <!-- Debounce Progress Bar -->
+        <div class="debounce-bar-container" id="debounce-bar-container">
+          <div class="debounce-progress" id="debounce-progress"></div>
+        </div>
+
+        <!-- Visual Result Feedback Banner -->
+        <div id="result-banner" class="result-indicator">
+          <div class="result-title" id="result-title">
+            <i data-lucide="check-circle"></i> Result Title
+          </div>
+          <div class="result-detail" id="result-detail">Result description</div>
+        </div>
+      </div>
+
+      <!-- Manual Input Fallback Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <i data-lucide="keyboard" style="color: var(--text-muted);"></i>
+            Input Manual NIM (Cadangan)
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="manual-nim-input" class="form-input" placeholder="Masukkan NIM (misal: 230101001)" />
+          <button class="btn" onclick="submitManualNim()" style="white-space: nowrap;">
+            <i data-lucide="send" style="width: 16px; height: 16px;"></i> Scan
+          </button>
+        </div>
+        
+        <!-- Quick Test Chips -->
+        <div style="margin-top: 10px;">
+          <span style="font-size: 0.72rem; color: var(--text-muted);">Uji Coba Cepat NIM Demo:</span>
+          <div class="quick-nim-chips">
+            <span class="chip" onclick="quickFillNim('230101001')">230101001 (Ahmad)</span>
+            <span class="chip" onclick="quickFillNim('230101002')">230101002 (Siti)</span>
+            <span class="chip" onclick="quickFillNim('230101004')">230101004 (Dewi)</span>
+            <span class="chip" onclick="quickFillNim('999999999')">999999999 (Invalid)</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ==================== TAB 2: KARTU & QR MAHASISWA ==================== -->
+    <div id="tab-pass" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <i data-lucide="id-card" style="color: var(--accent);"></i>
+            Kartu QR ID Mahasiswa
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Pilih / Cari Mahasiswa</label>
+          <select id="student-pass-select" class="form-select" onchange="generateStudentPass()">
+            <option value="">-- Pilih Mahasiswa --</option>
+          </select>
+        </div>
+
+        <!-- Student ID Card Display -->
+        <div class="qr-card-preview" id="qr-card-box">
+          <div style="font-size: 0.75rem; text-transform: uppercase; tracking: 1px; color: var(--accent); font-weight: 700;">
+            KARTU ANGGOTA ASRAMA
+          </div>
+          <div id="qr-student-name" style="font-size: 1.25rem; font-weight: 800; color: white; margin-top: 4px;">
+            Pilih Mahasiswa
+          </div>
+          <div id="qr-student-meta" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">
+            NIM: - | Kamar: -
+          </div>
+
+          <div id="qr-output-container">
+            <div id="qrcode-display"></div>
+          </div>
+
+          <div style="background: rgba(255,255,255,0.05); padding: 8px 16px; border-radius: 12px; font-size: 0.8rem; color: #a5b4fc; font-weight: 600;">
+            Total Terakumulasi: <span id="qr-student-points" style="font-weight: 800; color: white;">0</span> PTS
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 3: LEADERBOARD ==================== -->
+    <div id="tab-leaderboard" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <i data-lucide="trophy" style="color: #f59e0b;"></i>
+            Klasemen Poin Keaktifan
+          </div>
+          <button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.72rem;" onclick="loadLeaderboard()">
+            <i data-lucide="refresh-cw" style="width: 12px; height: 12px;"></i> Update
+          </button>
+        </div>
+        
+        <div class="leaderboard-list" id="leaderboard-container">
+          <div style="text-align: center; color: var(--text-muted); padding: 20px;">
+            Memuat data klasemen...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 4: ADMIN & KONEKSI API ==================== -->
+    <div id="tab-admin" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <i data-lucide="link" style="color: var(--accent);"></i>
+            Koneksi Google Apps Script API
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Google Apps Script Web App URL (REST API)</label>
+          <input type="text" id="api-url-input" class="form-input" placeholder="https://script.google.com/macros/s/.../exec" />
+        </div>
+        <button class="btn btn-block" onclick="saveApiUrl()">
+          <i data-lucide="save"></i> Simpan URL API Google Sheets
+        </button>
+        <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 8px;">
+          *Masukkan URL Deployment Google Apps Script (berakhiran <b>/exec</b>) agar frontend ini terhubung secara langsung ke Google Sheets tanpa iframe.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <i data-lucide="database" style="color: var(--primary);"></i>
+            Pengaturan Database & Sheets
+          </div>
+        </div>
+        <button class="btn btn-block btn-secondary" onclick="runInitDatabase()">
+          <i data-lucide="play-circle"></i> Inisialisasi Database Spreadsheet
+        </button>
+      </div>
+
+      <!-- Add Student Form -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <i data-lucide="user-plus" style="color: var(--success);"></i>
+            Tambah Data Mahasiswa
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">NIM</label>
+          <input type="text" id="admin-nim" class="form-input" placeholder="misal: 230101008" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nama Lengkap</label>
+          <input type="text" id="admin-nama" class="form-input" placeholder="misal: Andi Wijaya" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Kamar / Lorong</label>
+          <input type="text" id="admin-kamar" class="form-input" placeholder="misal: A-104" />
+        </div>
+        <button class="btn btn-block btn-secondary" onclick="runAddStudent()">
+          Simpan Mahasiswa Baru
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Navigation Bar -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" onclick="switchTab('tab-scanner', this)">
+      <i data-lucide="qr-code"></i>
+      <span>Pemindai</span>
+    </button>
+    <button class="nav-btn" onclick="switchTab('tab-pass', this)">
+      <i data-lucide="id-card"></i>
+      <span>Kartu QR</span>
+    </button>
+    <button class="nav-btn" onclick="switchTab('tab-leaderboard', this)">
+      <i data-lucide="trophy"></i>
+      <span>Klasemen</span>
+    </button>
+    <button class="nav-btn" onclick="switchTab('tab-admin', this)">
+      <i data-lucide="sliders"></i>
+      <span>Admin</span>
+    </button>
+  </nav>
+
+  <!-- Application Logic -->
+  <script>
+    // Global Application State
+    let html5QrCode = null;
+    let isScanning = false;
+    let activeEventsList = [];
+    let studentsList = [];
+    let selectedEventId = '';
+    let isDebounced = false;
+    let scannedCountInSession = 0;
+    
+    // Stored Apps Script API URL
+    let customApiUrl = localStorage.getItem('SIASRAMA_API_URL') || '';
+
+    // Web Audio Synthesizer
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
+      try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'success') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+          osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.35);
+        } else if (type === 'error') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+          osc.frequency.setValueAtTime(110, audioCtx.currentTime + 0.15);
+          gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.4);
+        }
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
+    function triggerHaptic(type) {
+      if ('vibrate' in navigator) {
+        if (type === 'success') navigator.vibrate(100);
+        else if (type === 'error') navigator.vibrate([100, 50, 100]);
+      }
+    }
+
+    // Universal Backend API Wrapper (Connects Standalone Frontend to GAS API URL or Local API)
+    function callBackend(actionName, params = {}, callback) {
+      let targetUrl = '';
+
+      if (customApiUrl) {
+        // Use user-defined Google Apps Script / External API endpoint
+        targetUrl = customApiUrl + (customApiUrl.includes('?') ? '&' : '?') + `action=${actionName}&` + new URLSearchParams(params).toString();
+      } else if (typeof google !== 'undefined' && google.script && google.script.run) {
+        // Inside GAS environment fallback
+        const runner = google.script.run
+          .withSuccessHandler(res => callback(res))
+          .withFailureHandler(err => callback({ success: false, message: err.toString() }));
+
+        if (actionName === 'getActiveEvents') runner.getActiveEvents();
+        else if (actionName === 'processAttendance') runner.processAttendance(params.nim, params.idKegiatan);
+        else if (actionName === 'getLeaderboard') runner.getLeaderboard();
+        else if (actionName === 'setupDatabase') runner.setupDatabase();
+        else if (actionName === 'addStudent') runner.addStudent(params.nim, params.nama, params.kamar);
+        return;
+      } else {
+        // Local Server Fallback
+        targetUrl = `/api?action=${actionName}&` + new URLSearchParams(params).toString();
+      }
+
+      fetch(targetUrl)
+        .then(res => res.json())
+        .then(data => callback(data))
+        .catch(() => fallbackMockEngine(actionName, params, callback));
+    }
+
+    function fallbackMockEngine(actionName, params, callback) {
+      if (actionName === 'getActiveEvents') {
+        callback([
+          { id: 'ACT-01', nama: 'Kajian Subuh & Character Building', poin: 10, status: 'AKTIF' },
+          { id: 'ACT-02', nama: 'Gotong Royong & Kebersihan Asrama', poin: 15, status: 'AKTIF' }
+        ]);
+      } else if (actionName === 'processAttendance') {
+        const nim = params.nim;
+        const idKegiatan = params.idKegiatan;
+        const mockMap = {
+          '230101001': { nim: '230101001', nama: 'Ahmad Rizky Pratama', kamar: 'A-101', totalPoin: 25 },
+          '230101002': { nim: '230101002', nama: 'Siti Nurhaliza', kamar: 'A-102', totalPoin: 35 },
+          '230101004': { nim: '230101004', nama: 'Dewi Lestari', kamar: 'B-202', totalPoin: 40 }
+        };
+
+        if (mockMap[nim]) {
+          const m = mockMap[nim];
+          callback({
+            success: true,
+            code: 'SUCCESS',
+            message: 'Presensi Berhasil (Mode Standalone)',
+            student: { nim: m.nim, nama: m.nama, kamar: m.kamar, prevTotalPoin: m.totalPoin, newTotalPoin: m.totalPoin + 10, poinAdded: 10 },
+            event: { id: idKegiatan, nama: 'Kegiatan Demo', poin: 10 }
+          });
+        } else {
+          callback({ success: false, code: 'NIM_NOT_FOUND', message: 'NIM ' + nim + ' tidak terdaftar dalam database.' });
+        }
+      } else if (actionName === 'getLeaderboard') {
+        callback([
+          { nim: '230101004', nama: 'Dewi Lestari', kamar: 'B-202', totalPoin: 40 },
+          { nim: '230101002', nama: 'Siti Nurhaliza', kamar: 'A-102', totalPoin: 35 },
+          { nim: '230101001', nama: 'Ahmad Rizky Pratama', kamar: 'A-101', totalPoin: 25 }
+        ]);
+      } else if (actionName === 'setupDatabase') {
+        callback({ success: true, message: 'Database lokal berhasil disiapkan.' });
+      }
+    }
+
+    // Save Custom API URL
+    function saveApiUrl() {
+      const url = document.getElementById('api-url-input').value.trim();
+      customApiUrl = url;
+      localStorage.setItem('SIASRAMA_API_URL', url);
+      alert('URL API Google Apps Script berhasil disimpan!');
+      loadEvents();
+      loadLeaderboard();
+    }
+
+    // Page Init
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      if (customApiUrl) {
+        document.getElementById('api-url-input').value = customApiUrl;
+      }
+      loadEvents();
+      loadLeaderboard();
+      initStudentSelect();
+    });
+
+    // Tab Switcher
+    function switchTab(tabId, btnElement) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+      
+      document.getElementById(tabId).classList.add('active');
+      btnElement.classList.add('active');
+
+      if (tabId !== 'tab-scanner' && isScanning) {
+        stopCamera();
+      }
+    }
+
+    // Load Events
+    function loadEvents() {
+      const select = document.getElementById('event-select');
+      select.innerHTML = '<option value="">-- Memuat Kegiatan... --</option>';
+
+      callBackend('getActiveEvents', {}, (data) => {
+        const events = Array.isArray(data) ? data : (data.data || []);
+        activeEventsList = events;
+
+        if (!events || events.length === 0) {
+          select.innerHTML = '<option value="">(Tidak Ada Kegiatan AKTIF)</option>';
+          document.getElementById('stat-event-points').innerText = '0 PTS';
+          return;
+        }
+
+        select.innerHTML = '<option value="">-- Pilih Kegiatan Aktif --</option>';
+        events.forEach(evt => {
+          const opt = document.createElement('option');
+          opt.value = evt.id;
+          opt.innerText = `[${evt.id}] ${evt.nama} (${evt.poin} PTS)`;
+          select.appendChild(opt);
+        });
+
+        if (events.length > 0) {
+          select.value = events[0].id;
+          onEventChanged();
+        }
+      });
+    }
+
+    function onEventChanged() {
+      const select = document.getElementById('event-select');
+      selectedEventId = select.value;
+      const found = activeEventsList.find(e => e.id === selectedEventId);
+      if (found) {
+        document.getElementById('stat-event-points').innerText = found.poin + ' PTS';
+      } else {
+        document.getElementById('stat-event-points').innerText = '0 PTS';
+      }
+    }
+
+    // Live Streaming Camera Toggle (WebRTC Camera Stream)
+    function toggleCamera() {
+      if (isScanning) {
+        stopCamera();
+      } else {
+        startCamera();
+      }
+    }
+
+    function startCamera() {
+      if (!selectedEventId) {
+        showResult('warning', 'Kegiatan Belum Dipilih', 'Silakan pilih kegiatan aktif terlebih dahulu.');
+        return;
+      }
+
+      html5QrCode = new Html5Qrcode("reader");
+      const config = { fps: 15, qrbox: { width: 200, height: 200 } };
+
+      html5QrCode.start(
+        { facingMode: "environment" },
+        config,
+        onQrCodeScanned,
+        () => {}
+      ).then(() => {
+        isScanning = true;
+        document.getElementById('scanner-overlay').style.display = 'flex';
+        document.getElementById('toggle-camera-btn').innerHTML = '<i data-lucide="video-off" style="width: 14px; height: 14px;"></i> Turn Off Kamera';
+        lucide.createIcons();
+      }).catch(err => {
+        console.error('Camera start error:', err);
+        showResult(
+          'error',
+          'Akses Kamera Ditolak / Tidak Ditemukan',
+          'Pastikan Anda memberikan izin kamera pada browser dan mengakses web ini melalui HTTPS atau domain terpisah.'
+        );
+      });
+    }
+
+    function stopCamera() {
+      if (html5QrCode && isScanning) {
+        html5QrCode.stop().then(() => {
+          html5QrCode.clear();
+          isScanning = false;
+          document.getElementById('scanner-overlay').style.display = 'none';
+          document.getElementById('toggle-camera-btn').innerHTML = '<i data-lucide="camera" style="width: 14px; height: 14px;"></i> Turn On Kamera';
+          lucide.createIcons();
+        }).catch(err => console.error(err));
+      }
+    }
+
+    // Scanned Handler
+    function onQrCodeScanned(decodedText) {
+      if (isDebounced) return;
+      const nim = decodedText ? decodedText.trim() : '';
+      if (!nim) return;
+      executeAttendanceProcess(nim);
+    }
+
+    function submitManualNim() {
+      const input = document.getElementById('manual-nim-input');
+      const nim = input.value.trim();
+      if (!nim) {
+        showResult('warning', 'NIM Kosong', 'Harap masukkan nomor NIM mahasiswa.');
+        return;
+      }
+      executeAttendanceProcess(nim);
+      input.value = '';
+    }
+
+    function quickFillNim(nim) {
+      document.getElementById('manual-nim-input').value = nim;
+      submitManualNim();
+    }
+
+    // Core Process
+    function executeAttendanceProcess(nim) {
+      if (!selectedEventId) {
+        showResult('warning', 'Pilih Kegiatan', 'Pilih kegiatan aktif sebelum memindai presensi.');
+        return;
+      }
+
+      triggerDebounceCooldown();
+      showResult('processing', 'Memproses Presensi...', `Memvalidasi NIM ${nim}...`);
+
+      callBackend('processAttendance', { nim: nim, idKegiatan: selectedEventId }, (res) => {
+        if (res.success) {
+          playSound('success');
+          triggerHaptic('success');
+          scannedCountInSession++;
+          document.getElementById('stat-scanned-count').innerText = scannedCountInSession;
+
+          showResult(
+            'success',
+            'PRESENSI BERHASIL! (+ ' + res.student.poinAdded + ' PTS)',
+            `<b>${res.student.nama}</b> (${res.student.nim}) - Kamar ${res.student.kamar}<br>Total Poin Baru: <b>${res.student.newTotalPoin} PTS</b>`
+          );
+        } else {
+          playSound('error');
+          triggerHaptic('error');
+
+          if (res.code === 'DUPLICATE') {
+            showResult('warning', 'PRESENSI GANDA DITOLAK', res.message);
+          } else if (res.code === 'NIM_NOT_FOUND') {
+            showResult('error', 'NIM TIDAK TERDAFTAR', res.message);
+          } else {
+            showResult('error', 'GAGAL PRESENSI', res.message || 'Terjadi kesalahan sistem.');
+          }
+        }
+      });
+    }
+
+    function triggerDebounceCooldown() {
+      isDebounced = true;
+      const barContainer = document.getElementById('debounce-bar-container');
+      const bar = document.getElementById('debounce-progress');
+      
+      barContainer.style.display = 'block';
+      bar.style.width = '100%';
+
+      setTimeout(() => { bar.style.width = '0%'; }, 50);
+      setTimeout(() => {
+        isDebounced = false;
+        barContainer.style.display = 'none';
+      }, 2500);
+    }
+
+    function showResult(type, title, detail) {
+      const banner = document.getElementById('result-banner');
+      const titleEl = document.getElementById('result-title');
+      const detailEl = document.getElementById('result-detail');
+
+      banner.className = 'result-indicator ' + type;
+      
+      let icon = 'info';
+      if (type === 'success') icon = 'check-circle';
+      else if (type === 'error') icon = 'alert-triangle';
+      else if (type === 'warning') icon = 'alert-circle';
+      else if (type === 'processing') icon = 'loader';
+
+      titleEl.innerHTML = `<i data-lucide="${icon}"></i> ${title}`;
+      detailEl.innerHTML = detail;
+      lucide.createIcons();
+    }
+
+    // Leaderboard
+    function loadLeaderboard() {
+      const container = document.getElementById('leaderboard-container');
+      container.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 20px;">Memuat data...</div>';
+
+      callBackend('getLeaderboard', {}, (data) => {
+        const list = Array.isArray(data) ? data : (data.data || []);
+        studentsList = list;
+        updateStudentPassDropdown(list);
+
+        if (!list || list.length === 0) {
+          container.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 20px;">Belum ada data mahasiswa.</div>';
+          return;
+        }
+
+        let html = '';
+        list.forEach((item, idx) => {
+          const rank = idx + 1;
+          let rankClass = '';
+          if (rank === 1) rankClass = 'rank-1';
+          else if (rank === 2) rankClass = 'rank-2';
+          else if (rank === 3) rankClass = 'rank-3';
+
+          html += `
+            <div class="leaderboard-item">
+              <div class="leaderboard-rank ${rankClass}">${rank}</div>
+              <div class="student-info">
+                <div class="student-name">${item.nama}</div>
+                <div class="student-meta">NIM: ${item.nim} | Kamar: ${item.kamar}</div>
+              </div>
+              <div class="points-badge">${item.totalPoin} PTS</div>
+            </div>
+          `;
+        });
+
+        container.innerHTML = html;
+      });
+    }
+
+    // Student Pass Dropdown & QR Generator
+    function initStudentSelect() {
+      if (studentsList.length > 0) {
+        updateStudentPassDropdown(studentsList);
+      }
+    }
+
+    function updateStudentPassDropdown(list) {
+      const select = document.getElementById('student-pass-select');
+      select.innerHTML = '<option value="">-- Pilih Mahasiswa --</option>';
+      list.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.nim;
+        opt.innerText = `${s.nama} (${s.nim}) - ${s.kamar}`;
+        select.appendChild(opt);
+      });
+    }
+
+    function generateStudentPass() {
+      const nim = document.getElementById('student-pass-select').value;
+      const display = document.getElementById('qrcode-display');
+      display.innerHTML = '';
+
+      if (!nim) return;
+
+      const student = studentsList.find(s => s.nim === nim);
+      if (student) {
+        document.getElementById('qr-student-name').innerText = student.nama;
+        document.getElementById('qr-student-meta').innerText = `NIM: ${student.nim} | Kamar: ${student.kamar}`;
+        document.getElementById('qr-student-points').innerText = student.totalPoin;
+
+        new QRCode(display, {
+          text: student.nim,
+          width: 160,
+          height: 160,
+          colorDark : "#0f172a",
+          colorLight : "#ffffff",
+          correctLevel : QRCode.CorrectLevel.H
+        });
+      }
+    }
+
+    // Admin Actions
+    function runInitDatabase() {
+      callBackend('setupDatabase', {}, (res) => {
+        alert(res.message);
+        loadEvents();
+        loadLeaderboard();
+      });
+    }
+
+    function runAddStudent() {
+      const nim = document.getElementById('admin-nim').value.trim();
+      const nama = document.getElementById('admin-nama').value.trim();
+      const kamar = document.getElementById('admin-kamar').value.trim();
+
+      if (!nim || !nama || !kamar) {
+        alert('Harap lengkapi NIM, Nama, dan Kamar.');
+        return;
+      }
+
+      callBackend('addStudent', { nim: nim, nama: nama, kamar: kamar }, (res) => {
+        alert(res.message);
+        if (res.success) {
+          document.getElementById('admin-nim').value = '';
+          document.getElementById('admin-nama').value = '';
+          document.getElementById('admin-kamar').value = '';
+          loadLeaderboard();
+        }
+      });
+    }
+  </script>
+</body>
+</html>
