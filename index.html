@@ -886,15 +886,13 @@
       }
     }
 
-    // Universal Backend API Wrapper (Connects Standalone Frontend to GAS API URL or Local API)
+    // Universal Backend API Wrapper
     function callBackend(actionName, params = {}, callback) {
       let targetUrl = '';
 
       if (customApiUrl) {
-        // Use user-defined Google Apps Script / External API endpoint
         targetUrl = customApiUrl + (customApiUrl.includes('?') ? '&' : '?') + `action=${actionName}&` + new URLSearchParams(params).toString();
       } else if (typeof google !== 'undefined' && google.script && google.script.run) {
-        // Inside GAS environment fallback
         const runner = google.script.run
           .withSuccessHandler(res => callback(res))
           .withFailureHandler(err => callback({ success: false, message: err.toString() }));
@@ -906,7 +904,6 @@
         else if (actionName === 'addStudent') runner.addStudent(params.nim, params.nama, params.kamar);
         return;
       } else {
-        // Local Server Fallback
         targetUrl = `/api?action=${actionName}&` + new URLSearchParams(params).toString();
       }
 
@@ -1029,7 +1026,7 @@
       }
     }
 
-    // Live Streaming Camera Toggle (WebRTC Camera Stream)
+    // Live Streaming Camera Toggle
     function toggleCamera() {
       if (isScanning) {
         stopCamera();
@@ -1062,7 +1059,7 @@
         showResult(
           'error',
           'Akses Kamera Ditolak / Tidak Ditemukan',
-          'Pastikan Anda memberikan izin kamera pada browser dan mengakses web ini melalui HTTPS atau domain terpisah.'
+          'Pastikan Anda memberikan izin kamera pada browser.'
         );
       });
     }
